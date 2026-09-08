@@ -1,6 +1,6 @@
 # Strategy Track Record (public)
 
-Static GitHub Pages site with abstracted strategy performance.
+Static GitHub Pages site with strategy performance.
 No instruments, session names, or trade entries/exits.
 
 ## Local preview
