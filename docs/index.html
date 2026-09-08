@@ -20,7 +20,7 @@
     * { box-sizing: border-box; }
     body {
       margin: 0;
-      font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+      font-family: "IBM Plex Sans", "Segoe UI", sans-serif;
       background: var(--bg);
       color: var(--text);
       line-height: 1.45;
@@ -92,11 +92,11 @@
   <div class="wrap">
     <header>
       <h1 id="product-title">Strategy Track Record</h1>
-      <div class="sub" id="as-of">Hypothetical backtest · as of —</div>
+      <div class="sub" id="as-of">Practice + backtest · as of —</div>
     </header>
 
     <div class="banner" id="top-disclaimer">
-      Hypothetical backtest only — not live trading results and not an offer to invest.
+      Practice track (top) is unaudited. Backtest (bottom) is hypothetical — not an offer to invest.
     </div>
 
     <div class="tabs" id="tabs"></div>
@@ -115,12 +115,54 @@
       ((x * 100).toFixed(1) + "%");
     const cls = (x) => x > 0 ? "pos" : (x < 0 ? "neg" : "");
 
+    function lineChart(canvasId, labels, datasets, yPadFrac) {
+      const all = datasets.flatMap(ds => (ds.data || []).filter(v => v != null));
+      let yOpts = {
+        ticks: {
+          color: "#9aa7b5",
+          callback: (v) => "$" + Number(v).toLocaleString(),
+        },
+        grid: { color: "#1c2530" },
+      };
+      if (yPadFrac && all.length) {
+        const mn = Math.min(...all);
+        const mx = Math.max(...all);
+        const pad = Math.max((mx - mn) * yPadFrac, Math.abs(mx) * 0.002, 50);
+        yOpts.min = Math.floor(mn - pad);
+        yOpts.max = Math.ceil(mx + pad);
+      }
+      return new Chart(document.getElementById(canvasId), {
+        type: "line",
+        data: { labels, datasets },
+        options: {
+          responsive: true,
+          interaction: { mode: "index", intersect: false },
+          plugins: {
+            legend: { labels: { color: "#e8eef6" } },
+            tooltip: {
+              callbacks: {
+                label: (ctx) => `${ctx.dataset.label}: ${fmtUSD(ctx.parsed.y)}`,
+              },
+            },
+          },
+          scales: {
+            x: {
+              ticks: { color: "#9aa7b5", maxTicksLimit: 12 },
+              grid: { color: "#1c2530" },
+            },
+            y: yOpts,
+          },
+        },
+      });
+    }
+
     async function load() {
       const res = await fetch("data/fx_momentum.json", { cache: "no-store" });
       const data = await res.json();
       document.getElementById("product-title").textContent = data.product_name || "FX Momentum";
+      const pk = data.practice_kpis || {};
       document.getElementById("as-of").textContent =
-        `Hypothetical backtest · as of ${data.as_of || "—"} · start ${fmtUSD(data.methodology.start_equity_usd)}`;
+        `Practice track + backtest · as of ${data.as_of || "—"} · start ${fmtUSD(data.methodology.start_equity_usd)}`;
       document.getElementById("top-disclaimer").textContent = data.disclaimer;
 
       const tabs = document.getElementById("tabs");
@@ -139,21 +181,45 @@
     function renderFxMomentum(d) {
       const k = d.kpis || {};
       const b = d.benchmark_kpis || {};
+      const p = d.practice_kpis || {};
       const m = d.methodology || {};
       const root = document.getElementById("content");
       root.innerHTML = `
         <div class="panel">
-          <h2>${d.product_name} vs unmanaged US equity (SPY, long-only)</h2>
+          <h2>Practice track (current default size)</h2>
+          <canvas id="practiceChart"></canvas>
+          <p class="note">${m.practice_note || ""}</p>
+          <p class="note">${m.live_size_note || ""}</p>
+          <p class="note">Window: ${p.window_start || "—"} → ${p.window_end || "—"}
+            · campaigns: ${p.n_campaigns ?? "—"}
+            · net ${fmtUSD(p.net_usd)}.</p>
+        </div>
+
+        <div class="panel">
+          <h2>Practice KPIs</h2>
+          <div class="kpis">
+            ${kpi("End equity", fmtUSD(p.end_equity))}
+            ${kpi("Net PnL", fmtUSD(p.net_usd), cls(p.net_usd))}
+            ${kpi("Total return", fmtPct(p.total_return), cls(p.total_return))}
+            ${kpi("Max DD", fmtUSD(p.max_dd_usd), "neg")}
+            ${kpi("Campaigns", String(p.n_campaigns ?? "—"))}
+          </div>
+        </div>
+
+        <div class="panel">
+          <h2>Full backtest (live size + 2× after 2× max DD) vs SPY</h2>
           <canvas id="eqChart"></canvas>
           <p class="note">${m.equity_footnote || ""}</p>
-          <p class="note">Window: ${m.window_start} → ${m.window_end} · campaigns: ${m.n_campaigns}
-            · published research N/S ${m.published_ns} (net ${fmtUSD(m.published_net_usd)}, stress ${fmtUSD(m.published_stress_usd)}).</p>
-          <p class="note">${m.practice_note || ""}</p>
+          <p class="note">${m.size_up_rule || ""}</p>
+          <p class="note">Size doubled on ${m.size_double_date || "—"}
+            (threshold ${fmtUSD(m.size_double_threshold_usd)}).
+            Window: ${m.window_start} → ${m.window_end} · campaigns: ${m.n_campaigns}
+            · research N/S ${m.published_ns} (net ${fmtUSD(m.published_net_usd)}, stress ${fmtUSD(m.published_stress_usd)}).</p>
         </div>
 
         <div class="compare">
           <div class="panel">
-            <h2>${d.product_name} KPIs ($100k additive path)</h2>
+            <h2>${d.product_name} backtest KPIs</h2>
             <div class="kpis">
               ${kpi("End equity", fmtUSD(k.end_equity))}
               ${kpi("Total return", fmtPct(k.total_return), cls(k.total_return))}
@@ -166,6 +232,7 @@
               ${kpi("Time underwater", fmtPct(k.time_underwater_pct))}
               ${kpi("Positive years", fmtPct(k.positive_years_pct))}
               ${kpi("Worst year", `${k.worst_year} (${fmtUSD(k.worst_year_pnl_usd)})`, "neg")}
+              ${kpi("Final size", `${k.final_size_mult ?? 1}×`)}
             </div>
           </div>
           <div class="panel">
@@ -187,7 +254,8 @@
           <h2>Risk</h2>
           <p class="note">${d.stress_note || ""}</p>
           <p class="note">Typical risk: ${d.risk?.typical_risk_units || "—"}.
-            Concurrent exposure: ${d.risk?.max_simultaneous_risk_units || "—"}.</p>
+            Concurrent exposure: ${d.risk?.max_simultaneous_risk_units || "—"}.
+            Size-up: ${d.risk?.size_up || "—"}.</p>
         </div>
 
         <div class="panel">
@@ -199,6 +267,7 @@
                 <th>Year</th>
                 <th>Strategy PnL</th>
                 <th>Strategy equity EOY</th>
+                <th>Size (EOY)</th>
                 <th>SPY return</th>
                 <th>SPY PnL on $100k</th>
               </tr>
@@ -215,66 +284,48 @@
           <td>${row.year}</td>
           <td class="${cls(row.strategy_pnl_usd)}">${fmtUSD(row.strategy_pnl_usd)}</td>
           <td>${fmtUSD(row.strategy_equity_end)}</td>
+          <td>${row.size_mult_eoy != null ? row.size_mult_eoy + "×" : "—"}</td>
           <td class="${cls(row.benchmark_return)}">${fmtPct(row.benchmark_return)}</td>
           <td class="${cls(row.benchmark_pnl_usd)}">${fmtUSD(row.benchmark_pnl_usd)}</td>`;
         tbody.appendChild(tr);
       }
 
-      const sLabels = (d.equity_strategy || []).map(p => p.date);
-      const sVals = (d.equity_strategy || []).map(p => p.equity);
-      const bMap = Object.fromEntries((d.equity_benchmark || []).map(p => [p.date, p.equity]));
-      const bVals = sLabels.map(dt => bMap[dt] ?? null);
+      const pLabels = (d.equity_practice || []).map(pt => pt.date);
+      const pVals = (d.equity_practice || []).map(pt => pt.equity);
+      lineChart("practiceChart", pLabels, [{
+        label: "Practice (size-normalized)",
+        data: pVals,
+        borderColor: "#3ecf8e",
+        backgroundColor: "rgba(62,207,142,0.12)",
+        borderWidth: 2,
+        pointRadius: 3,
+        tension: 0.2,
+        fill: true,
+      }], 0.35);
 
-      new Chart(document.getElementById("eqChart"), {
-        type: "line",
-        data: {
-          labels: sLabels,
-          datasets: [
-            {
-              label: d.product_name,
-              data: sVals,
-              borderColor: "#3d9cf0",
-              backgroundColor: "rgba(61,156,240,0.12)",
-              borderWidth: 2,
-              pointRadius: 0,
-              tension: 0.15,
-            },
-            {
-              label: "SPY (long-only)",
-              data: bVals,
-              borderColor: "#9aa7b5",
-              borderWidth: 2,
-              pointRadius: 0,
-              tension: 0.15,
-            },
-          ],
+      const sLabels = (d.equity_strategy || []).map(pt => pt.date);
+      const sVals = (d.equity_strategy || []).map(pt => pt.equity);
+      const bMap = Object.fromEntries((d.equity_benchmark || []).map(pt => [pt.date, pt.equity]));
+      const bVals = sLabels.map(dt => bMap[dt] ?? null);
+      lineChart("eqChart", sLabels, [
+        {
+          label: d.product_name + " (sized)",
+          data: sVals,
+          borderColor: "#3d9cf0",
+          backgroundColor: "rgba(61,156,240,0.12)",
+          borderWidth: 2,
+          pointRadius: 0,
+          tension: 0.15,
         },
-        options: {
-          responsive: true,
-          interaction: { mode: "index", intersect: false },
-          plugins: {
-            legend: { labels: { color: "#e8eef6" } },
-            tooltip: {
-              callbacks: {
-                label: (ctx) => `${ctx.dataset.label}: ${fmtUSD(ctx.parsed.y)}`,
-              },
-            },
-          },
-          scales: {
-            x: {
-              ticks: { color: "#9aa7b5", maxTicksLimit: 10 },
-              grid: { color: "#1c2530" },
-            },
-            y: {
-              ticks: {
-                color: "#9aa7b5",
-                callback: (v) => "$" + Number(v).toLocaleString(),
-              },
-              grid: { color: "#1c2530" },
-            },
-          },
+        {
+          label: "SPY (long-only)",
+          data: bVals,
+          borderColor: "#9aa7b5",
+          borderWidth: 2,
+          pointRadius: 0,
+          tension: 0.15,
         },
-      });
+      ], null);
     }
 
     load().catch((err) => {
