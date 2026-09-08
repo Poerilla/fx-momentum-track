@@ -178,6 +178,15 @@
       return `<div class="kpi"><div class="lbl">${label}</div><div class="val ${extraClass || ""}">${valueHtml}</div></div>`;
     }
 
+    function sizeUpEventsNote(events) {
+      if (!events || !events.length) return "No size-ups triggered. ";
+      const parts = events.map((e) => {
+        const step = e.step === 1.5 ? "×1.5" : "×2";
+        return `${e.effective_year}: ${e.from_mult}→${e.to_mult} (${step}; lookback ${e.lookback_year} PnL ${fmtUSD(e.lookback_pnl_usd)} vs DD ${fmtUSD(e.lookback_dd_usd)})`;
+      });
+      return `Size-ups: ${parts.join("; ")}. `;
+    }
+
     function renderFxMomentum(d) {
       const k = d.kpis || {};
       const b = d.benchmark_kpis || {};
@@ -207,12 +216,11 @@
         </div>
 
         <div class="panel">
-          <h2>Full backtest (live size + 2× after 2× max DD) vs SPY</h2>
+          <h2>Full backtest (live size + yearly rolling size-ups) vs SPY</h2>
           <canvas id="eqChart"></canvas>
           <p class="note">${m.equity_footnote || ""}</p>
           <p class="note">${m.size_up_rule || ""}</p>
-          <p class="note">Size doubled on ${m.size_double_date || "—"}
-            (threshold ${fmtUSD(m.size_double_threshold_usd)}).
+          <p class="note">${sizeUpEventsNote(m.size_up_events || k.size_up_events || [])}
             Window: ${m.window_start} → ${m.window_end} · campaigns: ${m.n_campaigns}
             · research N/S ${m.published_ns} (net ${fmtUSD(m.published_net_usd)}, stress ${fmtUSD(m.published_stress_usd)}).</p>
         </div>
