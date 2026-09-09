@@ -6,8 +6,8 @@ No instruments, session names, or trade entries/exits.
 Tabs (see `docs/data/catalog.json`):
 
 - **FX Momentum**
-- **FX Breakout**
-- **Index Breakout**
+- **FX Intraday Trend**
+- **Index Momentum**
 
 ## Local preview
 
