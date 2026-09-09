@@ -1,7 +1,13 @@
 # Strategy Track Record (public)
 
-Static GitHub Pages site with strategy performance.
+Static GitHub Pages site with abstracted strategy performance.
 No instruments, session names, or trade entries/exits.
+
+Tabs (see `docs/data/catalog.json`):
+
+- **FX Momentum**
+- **FX Breakout**
+- **Index Breakout**
 
 ## Local preview
 

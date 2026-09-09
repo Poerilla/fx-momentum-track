@@ -115,6 +115,15 @@
       ((x * 100).toFixed(1) + "%");
     const cls = (x) => x > 0 ? "pos" : (x < 0 ? "neg" : "");
 
+    let chartHandles = [];
+
+    function destroyCharts() {
+      for (const c of chartHandles) {
+        try { c.destroy(); } catch (_) {}
+      }
+      chartHandles = [];
+    }
+
     function lineChart(canvasId, labels, datasets, yPadFrac) {
       const all = datasets.flatMap(ds => (ds.data || []).filter(v => v != null));
       let yOpts = {
@@ -131,7 +140,7 @@
         yOpts.min = Math.floor(mn - pad);
         yOpts.max = Math.ceil(mx + pad);
       }
-      return new Chart(document.getElementById(canvasId), {
+      const chart = new Chart(document.getElementById(canvasId), {
         type: "line",
         data: { labels, datasets },
         options: {
@@ -154,24 +163,8 @@
           },
         },
       });
-    }
-
-    async function load() {
-      const res = await fetch("data/fx_momentum.json", { cache: "no-store" });
-      const data = await res.json();
-      document.getElementById("product-title").textContent = data.product_name || "FX Momentum";
-      const pk = data.practice_kpis || {};
-      document.getElementById("as-of").textContent =
-        `Practice track + backtest · as of ${data.as_of || "—"} · start ${fmtUSD(data.methodology.start_equity_usd)}`;
-      document.getElementById("top-disclaimer").textContent = data.disclaimer;
-
-      const tabs = document.getElementById("tabs");
-      const btn = document.createElement("button");
-      btn.className = "tab active";
-      btn.textContent = data.product_name || "FX Momentum";
-      tabs.appendChild(btn);
-
-      renderFxMomentum(data);
+      chartHandles.push(chart);
+      return chart;
     }
 
     function kpi(label, valueHtml, extraClass) {
@@ -187,11 +180,18 @@
       return `Size-ups: ${parts.join("; ")}. `;
     }
 
-    function renderFxMomentum(d) {
+    function renderStrategy(d) {
+      destroyCharts();
       const k = d.kpis || {};
       const b = d.benchmark_kpis || {};
       const p = d.practice_kpis || {};
       const m = d.methodology || {};
+      document.getElementById("product-title").textContent = d.product_name || "Strategy";
+      document.getElementById("as-of").textContent =
+        `Practice track + backtest · as of ${d.as_of || "—"} · start ${fmtUSD(m.start_equity_usd)}`;
+      document.getElementById("top-disclaimer").textContent = d.disclaimer ||
+        "Practice track (top) is unaudited. Backtest (bottom) is hypothetical — not an offer to invest.";
+
       const root = document.getElementById("content");
       root.innerHTML = `
         <div class="panel">
@@ -300,16 +300,18 @@
 
       const pLabels = (d.equity_practice || []).map(pt => pt.date);
       const pVals = (d.equity_practice || []).map(pt => pt.equity);
-      lineChart("practiceChart", pLabels, [{
-        label: "Practice (size-normalized)",
-        data: pVals,
-        borderColor: "#3ecf8e",
-        backgroundColor: "rgba(62,207,142,0.12)",
-        borderWidth: 2,
-        pointRadius: 3,
-        tension: 0.2,
-        fill: true,
-      }], 0.35);
+      if (pLabels.length) {
+        lineChart("practiceChart", pLabels, [{
+          label: "Practice (size-normalized)",
+          data: pVals,
+          borderColor: "#3ecf8e",
+          backgroundColor: "rgba(62,207,142,0.12)",
+          borderWidth: 2,
+          pointRadius: 3,
+          tension: 0.2,
+          fill: true,
+        }], 0.35);
+      }
 
       const sLabels = (d.equity_strategy || []).map(pt => pt.date);
       const sVals = (d.equity_strategy || []).map(pt => pt.equity);
@@ -336,10 +338,50 @@
       ], null);
     }
 
-    load().catch((err) => {
+    async function loadTab(tab, buttons) {
+      for (const b of buttons) b.classList.toggle("active", b.dataset.id === tab.id);
+      const res = await fetch(tab.data, { cache: "no-store" });
+      if (!res.ok) throw new Error(`Failed to load ${tab.data}: ${res.status}`);
+      const data = await res.json();
+      renderStrategy(data);
+      if (history.replaceState) {
+        history.replaceState(null, "", "#" + tab.id);
+      }
+    }
+
+    async function load() {
+      const catRes = await fetch("data/catalog.json", { cache: "no-store" });
+      if (!catRes.ok) throw new Error("Failed to load catalog.json");
+      const catalog = await catRes.json();
+      document.getElementById("product-title").textContent = catalog.title || "Strategy Track Record";
+      if (catalog.disclaimer) {
+        document.getElementById("top-disclaimer").textContent = catalog.disclaimer;
+      }
+
+      const tabsEl = document.getElementById("tabs");
+      tabsEl.innerHTML = "";
+      const buttons = [];
+      const want = (location.hash || "").replace(/^#/, "");
+      let initial = catalog.tabs[0];
+      for (const tab of catalog.tabs) {
+        if (tab.id === want) initial = tab;
+        const btn = document.createElement("button");
+        btn.className = "tab";
+        btn.textContent = tab.name;
+        btn.dataset.id = tab.id;
+        btn.addEventListener("click", () => loadTab(tab, buttons).catch(showErr));
+        tabsEl.appendChild(btn);
+        buttons.push(btn);
+      }
+      await loadTab(initial, buttons);
+    }
+
+    function showErr(err) {
       document.getElementById("content").innerHTML =
         `<div class="panel"><p class="note">Failed to load data: ${err}</p></div>`;
-    });
+    }
+
+    load().catch(showErr);
   </script>
 </body>
 </html>
