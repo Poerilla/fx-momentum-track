@@ -171,15 +171,6 @@
       return `<div class="kpi"><div class="lbl">${label}</div><div class="val ${extraClass || ""}">${valueHtml}</div></div>`;
     }
 
-    function sizeUpEventsNote(events) {
-      if (!events || !events.length) return "No size-ups triggered. ";
-      const parts = events.map((e) => {
-        const step = e.step === 1.5 ? "×1.5" : "×2";
-        return `${e.effective_year}: ${e.from_mult}→${e.to_mult} (${step}; lookback ${e.lookback_year} PnL ${fmtUSD(e.lookback_pnl_usd)} vs DD ${fmtUSD(e.lookback_dd_usd)})`;
-      });
-      return `Size-ups: ${parts.join("; ")}. `;
-    }
-
     function renderStrategy(d) {
       destroyCharts();
       const k = d.kpis || {};
@@ -188,17 +179,16 @@
       const m = d.methodology || {};
       document.getElementById("product-title").textContent = d.product_name || "Strategy";
       document.getElementById("as-of").textContent =
-        `Practice track + backtest · as of ${d.as_of || "—"} · start ${fmtUSD(m.start_equity_usd)}`;
+        `Practice + backtest · as of ${d.as_of || "—"} · start ${fmtUSD(m.start_equity_usd)}`;
       document.getElementById("top-disclaimer").textContent = d.disclaimer ||
         "Practice track (top) is unaudited. Backtest (bottom) is hypothetical — not an offer to invest.";
 
       const root = document.getElementById("content");
       root.innerHTML = `
         <div class="panel">
-          <h2>Practice track (current default size)</h2>
+          <h2>Practice track</h2>
           <canvas id="practiceChart"></canvas>
           <p class="note">${m.practice_note || ""}</p>
-          <p class="note">${m.live_size_note || ""}</p>
           <p class="note">Window: ${p.window_start || "—"} → ${p.window_end || "—"}
             · campaigns: ${p.n_campaigns ?? "—"}
             · net ${fmtUSD(p.net_usd)}.</p>
@@ -216,13 +206,11 @@
         </div>
 
         <div class="panel">
-          <h2>Full backtest (live size + yearly rolling size-ups) vs SPY</h2>
+          <h2>Backtest vs SPY</h2>
           <canvas id="eqChart"></canvas>
           <p class="note">${m.equity_footnote || ""}</p>
-          <p class="note">${m.size_up_rule || ""}</p>
-          <p class="note">${sizeUpEventsNote(m.size_up_events || k.size_up_events || [])}
-            Window: ${m.window_start} → ${m.window_end} · campaigns: ${m.n_campaigns}
-            · research N/S ${m.published_ns} (net ${fmtUSD(m.published_net_usd)}, stress ${fmtUSD(m.published_stress_usd)}).</p>
+          <p class="note">Window: ${m.window_start} → ${m.window_end} · campaigns: ${m.n_campaigns}
+            · N/S ${m.published_ns} (net ${fmtUSD(m.published_net_usd)}, stress ${fmtUSD(m.published_stress_usd)}).</p>
         </div>
 
         <div class="compare">
@@ -240,7 +228,6 @@
               ${kpi("Time underwater", fmtPct(k.time_underwater_pct))}
               ${kpi("Positive years", fmtPct(k.positive_years_pct))}
               ${kpi("Worst year", `${k.worst_year} (${fmtUSD(k.worst_year_pnl_usd)})`, "neg")}
-              ${kpi("Final size", `${k.final_size_mult ?? 1}×`)}
             </div>
           </div>
           <div class="panel">
@@ -254,16 +241,13 @@
               ${kpi("Sortino", (b.sortino ?? 0).toFixed(2))}
               ${kpi("Time underwater", fmtPct(b.time_underwater_pct))}
             </div>
-            <p class="note">Label: ${m.benchmark || "unmanaged US equity, long-only"}.</p>
+            <p class="note">${m.benchmark || "Unmanaged US equity, long-only."}</p>
           </div>
         </div>
 
         <div class="panel">
           <h2>Risk</h2>
           <p class="note">${d.stress_note || ""}</p>
-          <p class="note">Typical risk: ${d.risk?.typical_risk_units || "—"}.
-            Concurrent exposure: ${d.risk?.max_simultaneous_risk_units || "—"}.
-            Size-up: ${d.risk?.size_up || "—"}.</p>
         </div>
 
         <div class="panel">
@@ -275,7 +259,6 @@
                 <th>Year</th>
                 <th>Strategy PnL</th>
                 <th>Strategy equity EOY</th>
-                <th>Size (EOY)</th>
                 <th>SPY return</th>
                 <th>SPY PnL on $100k</th>
               </tr>
@@ -292,7 +275,6 @@
           <td>${row.year}</td>
           <td class="${cls(row.strategy_pnl_usd)}">${fmtUSD(row.strategy_pnl_usd)}</td>
           <td>${fmtUSD(row.strategy_equity_end)}</td>
-          <td>${row.size_mult_eoy != null ? row.size_mult_eoy + "×" : "—"}</td>
           <td class="${cls(row.benchmark_return)}">${fmtPct(row.benchmark_return)}</td>
           <td class="${cls(row.benchmark_pnl_usd)}">${fmtUSD(row.benchmark_pnl_usd)}</td>`;
         tbody.appendChild(tr);
@@ -302,7 +284,7 @@
       const pVals = (d.equity_practice || []).map(pt => pt.equity);
       if (pLabels.length) {
         lineChart("practiceChart", pLabels, [{
-          label: "Practice (size-normalized)",
+          label: "Practice",
           data: pVals,
           borderColor: "#3ecf8e",
           backgroundColor: "rgba(62,207,142,0.12)",
@@ -319,7 +301,7 @@
       const bVals = sLabels.map(dt => bMap[dt] ?? null);
       lineChart("eqChart", sLabels, [
         {
-          label: d.product_name + " (sized)",
+          label: d.product_name,
           data: sVals,
           borderColor: "#3d9cf0",
           backgroundColor: "rgba(61,156,240,0.12)",
