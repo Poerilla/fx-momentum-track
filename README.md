@@ -1,20 +1,21 @@
-# Strategy Track Record (public)
+# Strategy Tear Sheets (public)
 
-Static GitHub Pages site with abstracted strategy performance.
-No instruments, session names, or trade entries/exits.
+Static GitHub Pages tear sheets. Abstracted performance only —
+no instruments, session names, or trade entries/exits.
 
-Tabs (see `docs/data/catalog.json`):
+Tabs:
 
 - **FX Momentum**
 - **FX Intraday Trend**
 - **Index Momentum**
 
+Each tab separates **LIVE/SIM** (unaudited practice) from **BACKTEST**
+(hypothetical). Growth of $100,000 additive path. No benchmark overlay.
+
 ## Local preview
 
 ```bash
 cd docs && python3 -m http.server 8765
-# open http://127.0.0.1:8765/
 ```
 
-Data under `docs/data/` is sanitized JSON only (no symbols).
 Pages source: `/docs`.
