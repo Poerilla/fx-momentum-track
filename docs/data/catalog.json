@@ -1,6 +1,6 @@
 {
-  "schema_version": 1,
-  "title": "Strategy Track Record",
+  "schema_version": 2,
+  "title": "Strategy Tear Sheets",
   "as_of": "2026-09-10",
   "tabs": [
     {
@@ -19,5 +19,5 @@
       "data": "data/index_momentum.json"
     }
   ],
-  "disclaimer": "Practice track (top) is unaudited. Backtest (bottom) is hypothetical \u2014 not an offer to invest."
+  "disclaimer": "LIVE/SIM (top) is unaudited practice. BACKTEST (bottom) is hypothetical \u2014 not an offer to invest."
 }

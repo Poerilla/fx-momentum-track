@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Strategy Track Record</title>
+  <title>Strategy Tear Sheets</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
   <style>
     :root {
@@ -12,10 +12,13 @@
       --text: #e8eef6;
       --muted: #9aa7b5;
       --accent: #3d9cf0;
-      --good: #3ecf8e;
+      --live: #3ecf8e;
+      --backtest: #3d9cf0;
       --bad: #f07178;
       --border: #243041;
       --warn: #f0c14d;
+      --live-bg: #0f1a14;
+      --bt-bg: #10161f;
     }
     * { box-sizing: border-box; }
     body {
@@ -55,10 +58,33 @@
       padding: 16px 18px;
       margin-bottom: 16px;
     }
-    .panel h2 { margin: 0 0 12px; font-size: 1.05rem; }
+    .panel.live { background: var(--live-bg); border-color: #1e3a2c; }
+    .panel.backtest { background: var(--bt-bg); border-color: #1e2d42; }
+    .panel h2 { margin: 0 0 10px; font-size: 1.05rem; }
+    .badge {
+      display: inline-block;
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      padding: 3px 8px;
+      border-radius: 4px;
+      margin-right: 8px;
+      vertical-align: middle;
+    }
+    .badge.live { background: rgba(62,207,142,0.18); color: var(--live); }
+    .badge.backtest { background: rgba(61,156,240,0.18); color: var(--backtest); }
+    .overview {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+    .overview .item .lbl { color: var(--muted); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.04em; }
+    .overview .item .val { font-weight: 600; margin-top: 2px; }
     .kpis {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
       gap: 10px;
     }
     .kpi {
@@ -69,14 +95,15 @@
     }
     .kpi .lbl { color: var(--muted); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.04em; }
     .kpi .val { font-size: 1.05rem; font-weight: 600; margin-top: 4px; }
-    .pos { color: var(--good); }
+    .pos { color: var(--live); }
     .neg { color: var(--bad); }
-    canvas { max-height: 360px; }
-    table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
-    th, td { text-align: right; padding: 8px 10px; border-bottom: 1px solid var(--border); }
+    canvas { max-height: 300px; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+    th, td { text-align: right; padding: 6px 8px; border-bottom: 1px solid var(--border); }
     th:first-child, td:first-child { text-align: left; }
-    th { color: var(--muted); font-weight: 600; font-size: 0.75rem; text-transform: uppercase; }
+    th { color: var(--muted); font-weight: 600; font-size: 0.72rem; text-transform: uppercase; }
     .note { color: var(--muted); font-size: 0.85rem; margin-top: 8px; }
+    .window-line { font-size: 0.9rem; color: var(--muted); margin: 0 0 12px; }
     footer {
       margin-top: 28px;
       color: var(--muted);
@@ -84,19 +111,22 @@
       border-top: 1px solid var(--border);
       padding-top: 16px;
     }
-    .compare { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-    @media (max-width: 720px) { .compare { grid-template-columns: 1fr; } }
+    .charts-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    @media (max-width: 800px) { .charts-2 { grid-template-columns: 1fr; } }
+    .month-grid td.pos { color: var(--live); }
+    .month-grid td.neg { color: var(--bad); }
+    ul.disc { margin: 8px 0 0; padding-left: 18px; color: var(--muted); font-size: 0.85rem; }
   </style>
 </head>
 <body>
   <div class="wrap">
     <header>
-      <h1 id="product-title">Strategy Track Record</h1>
-      <div class="sub" id="as-of">Practice + backtest · as of —</div>
+      <h1 id="product-title">Strategy Tear Sheets</h1>
+      <div class="sub" id="as-of">Growth of $100,000 · as of —</div>
     </header>
 
     <div class="banner" id="top-disclaimer">
-      Practice track (top) is unaudited. Backtest (bottom) is hypothetical — not an offer to invest.
+      LIVE/SIM (top) is unaudited practice. BACKTEST (bottom) is hypothetical — not an offer to invest.
     </div>
 
     <div class="tabs" id="tabs"></div>
@@ -104,7 +134,7 @@
 
     <footer>
       Past performance does not guarantee future results. Strategy rules, markets, and trade-level
-      details are intentionally undisclosed. No broker account link is provided (fills would expose entries).
+      details are intentionally undisclosed. No broker account link is provided.
     </footer>
   </div>
 
@@ -113,32 +143,30 @@
       (x < 0 ? "-$" : "$") + Math.abs(x).toLocaleString(undefined, {maximumFractionDigits: 0});
     const fmtPct = (x) => (x == null || Number.isNaN(x)) ? "—" :
       ((x * 100).toFixed(1) + "%");
+    const fmtNum = (x, d=2) => (x == null || Number.isNaN(x)) ? "—" : Number(x).toFixed(d);
     const cls = (x) => x > 0 ? "pos" : (x < 0 ? "neg" : "");
 
     let chartHandles = [];
-
     function destroyCharts() {
-      for (const c of chartHandles) {
-        try { c.destroy(); } catch (_) {}
-      }
+      for (const c of chartHandles) { try { c.destroy(); } catch (_) {} }
       chartHandles = [];
     }
 
-    function lineChart(canvasId, labels, datasets, yPadFrac) {
+    function lineChart(canvasId, labels, datasets, yPadFrac, isPct) {
       const all = datasets.flatMap(ds => (ds.data || []).filter(v => v != null));
       let yOpts = {
         ticks: {
           color: "#9aa7b5",
-          callback: (v) => "$" + Number(v).toLocaleString(),
+          callback: (v) => isPct ? (Number(v) * 100).toFixed(0) + "%" : ("$" + Number(v).toLocaleString()),
         },
         grid: { color: "#1c2530" },
       };
       if (yPadFrac && all.length) {
         const mn = Math.min(...all);
         const mx = Math.max(...all);
-        const pad = Math.max((mx - mn) * yPadFrac, Math.abs(mx) * 0.002, 50);
-        yOpts.min = Math.floor(mn - pad);
-        yOpts.max = Math.ceil(mx + pad);
+        const pad = Math.max((mx - mn) * yPadFrac, Math.abs(mx) * 0.002, isPct ? 0.002 : 50);
+        yOpts.min = mn - pad;
+        yOpts.max = mx + pad;
       }
       const chart = new Chart(document.getElementById(canvasId), {
         type: "line",
@@ -150,15 +178,14 @@
             legend: { labels: { color: "#e8eef6" } },
             tooltip: {
               callbacks: {
-                label: (ctx) => `${ctx.dataset.label}: ${fmtUSD(ctx.parsed.y)}`,
+                label: (ctx) => isPct
+                  ? `${ctx.dataset.label}: ${fmtPct(ctx.parsed.y)}`
+                  : `${ctx.dataset.label}: ${fmtUSD(ctx.parsed.y)}`,
               },
             },
           },
           scales: {
-            x: {
-              ticks: { color: "#9aa7b5", maxTicksLimit: 12 },
-              grid: { color: "#1c2530" },
-            },
+            x: { ticks: { color: "#9aa7b5", maxTicksLimit: 10 }, grid: { color: "#1c2530" } },
             y: yOpts,
           },
         },
@@ -171,174 +198,200 @@
       return `<div class="kpi"><div class="lbl">${label}</div><div class="val ${extraClass || ""}">${valueHtml}</div></div>`;
     }
 
-    function renderStrategy(d) {
+    function renderTearSheet(d) {
       destroyCharts();
-      const k = d.kpis || {};
-      const b = d.benchmark_kpis || {};
-      const p = d.practice_kpis || {};
+      const ov = d.overview || {};
+      const win = d.windows || {};
+      const live = d.live || {};
+      const bt = d.backtest || {};
+      const lk = live.kpis || {};
+      const bk = bt.kpis || {};
       const m = d.methodology || {};
+
       document.getElementById("product-title").textContent = d.product_name || "Strategy";
       document.getElementById("as-of").textContent =
-        `Practice + backtest · as of ${d.as_of || "—"} · start ${fmtUSD(m.start_equity_usd)}`;
-      document.getElementById("top-disclaimer").textContent = d.disclaimer ||
-        "Practice track (top) is unaudited. Backtest (bottom) is hypothetical — not an offer to invest.";
+        `Growth of ${fmtUSD(m.start_equity_usd || 100000)} · as of ${d.as_of || "—"}`;
+      document.getElementById("top-disclaimer").textContent = d.disclaimer || "";
+
+      const liveWin = win.live || {};
+      const btWin = win.backtest || {};
+      const monthly = bt.monthly_returns || {};
+      const monthNames = monthly.months || ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+
+      let monthRows = "";
+      for (const row of (monthly.rows || [])) {
+        const cells = (row.months || []).map((v) =>
+          `<td class="${cls(v)}">${v == null ? "—" : fmtPct(v)}</td>`
+        ).join("");
+        monthRows += `<tr><td>${row.year}</td>${cells}<td class="${cls(row.annual)}">${fmtPct(row.annual)}</td></tr>`;
+      }
 
       const root = document.getElementById("content");
       root.innerHTML = `
         <div class="panel">
-          <h2>Practice track</h2>
-          <canvas id="practiceChart"></canvas>
-          <p class="note">${m.practice_note || ""}</p>
-          <p class="note">Window: ${p.window_start || "—"} → ${p.window_end || "—"}
-            · campaigns: ${p.n_campaigns ?? "—"}
-            · net ${fmtUSD(p.net_usd)}.</p>
-        </div>
-
-        <div class="panel">
-          <h2>Practice KPIs</h2>
-          <div class="kpis">
-            ${kpi("End equity", fmtUSD(p.end_equity))}
-            ${kpi("Net PnL", fmtUSD(p.net_usd), cls(p.net_usd))}
-            ${kpi("Total return", fmtPct(p.total_return), cls(p.total_return))}
-            ${kpi("Max DD", fmtUSD(p.max_dd_usd), "neg")}
-            ${kpi("Campaigns", String(p.n_campaigns ?? "—"))}
+          <h2>Strategy overview</h2>
+          <div class="overview">
+            <div class="item"><div class="lbl">Style</div><div class="val">${ov.style || "—"}</div></div>
+            <div class="item"><div class="lbl">Asset class</div><div class="val">${ov.asset_class || "—"}</div></div>
+            <div class="item"><div class="lbl">Holding period</div><div class="val">${ov.holding_period || "—"}</div></div>
+            <div class="item"><div class="lbl">Overnight</div><div class="val">${ov.overnight || "—"}</div></div>
           </div>
+          <p class="note">${ov.edge || ""}</p>
         </div>
 
-        <div class="panel">
-          <h2>Backtest vs SPY</h2>
-          <canvas id="eqChart"></canvas>
-          <p class="note">${m.equity_footnote || ""}</p>
-          <p class="note">Window: ${m.window_start} → ${m.window_end} · campaigns: ${m.n_campaigns}
-            · N/S ${m.published_ns} (net ${fmtUSD(m.published_net_usd)}, stress ${fmtUSD(m.published_stress_usd)}).</p>
+        <div class="panel live">
+          <h2><span class="badge live">Live / Sim</span> Practice track</h2>
+          <p class="window-line">Window: <strong>${liveWin.start || "—"} → ${liveWin.end || "—"}</strong>
+            · unaudited · this strategy only</p>
+          <canvas id="liveChart"></canvas>
+          <div class="kpis" style="margin-top:12px">
+            ${kpi("End equity", fmtUSD(lk.end_equity))}
+            ${kpi("Net PnL", fmtUSD(lk.net_usd), cls(lk.net_usd))}
+            ${kpi("Total return", fmtPct(lk.total_return), cls(lk.total_return))}
+            ${kpi("Max DD", fmtUSD(lk.max_dd_usd), "neg")}
+            ${kpi("Campaigns", String(lk.n_campaigns ?? lk.n_trades ?? "—"))}
+            ${kpi("Win rate", fmtPct(lk.win_rate))}
+            ${kpi("Avg hold (h)", fmtNum(lk.avg_holding_hours, 1))}
+          </div>
+          <p class="note">${live.note || ""}</p>
         </div>
 
-        <div class="compare">
-          <div class="panel">
-            <h2>${d.product_name} backtest KPIs</h2>
-            <div class="kpis">
-              ${kpi("End equity", fmtUSD(k.end_equity))}
-              ${kpi("Total return", fmtPct(k.total_return), cls(k.total_return))}
-              ${kpi("CAGR", fmtPct(k.cagr), cls(k.cagr))}
-              ${kpi("Max DD", fmtUSD(k.max_dd_usd), "neg")}
-              ${kpi("Max DD %", fmtPct(k.max_dd_pct), "neg")}
-              ${kpi("Sharpe", (k.sharpe ?? 0).toFixed(2))}
-              ${kpi("Sortino", (k.sortino ?? 0).toFixed(2))}
-              ${kpi("Calmar", (k.calmar ?? 0).toFixed(2))}
-              ${kpi("Time underwater", fmtPct(k.time_underwater_pct))}
-              ${kpi("Positive years", fmtPct(k.positive_years_pct))}
-              ${kpi("Worst year", `${k.worst_year} (${fmtUSD(k.worst_year_pnl_usd)})`, "neg")}
+        <div class="panel backtest">
+          <h2><span class="badge backtest">Backtest</span> Hypothetical historical study</h2>
+          <p class="window-line">Window: <strong>${btWin.start || "—"} → ${btWin.end || "—"}</strong>
+            · hypothetical · not live trading</p>
+          <div class="charts-2">
+            <div>
+              <canvas id="btChart"></canvas>
+              <p class="note">${m.equity_footnote || ""}</p>
+            </div>
+            <div>
+              <canvas id="ddChart"></canvas>
+              <p class="note">Drawdown from peak on the $100,000 path.</p>
             </div>
           </div>
-          <div class="panel">
-            <h2>Benchmark KPIs (SPY buy &amp; hold)</h2>
-            <div class="kpis">
-              ${kpi("End equity", fmtUSD(b.end_equity))}
-              ${kpi("Total return", fmtPct(b.total_return), cls(b.total_return))}
-              ${kpi("CAGR", fmtPct(b.cagr), cls(b.cagr))}
-              ${kpi("Max DD", fmtUSD(b.max_dd_usd), "neg")}
-              ${kpi("Sharpe", (b.sharpe ?? 0).toFixed(2))}
-              ${kpi("Sortino", (b.sortino ?? 0).toFixed(2))}
-              ${kpi("Time underwater", fmtPct(b.time_underwater_pct))}
-            </div>
-            <p class="note">${m.benchmark || "Unmanaged US equity, long-only."}</p>
+          <div class="kpis" style="margin-top:12px">
+            ${kpi("End equity", fmtUSD(bk.end_equity))}
+            ${kpi("Total return", fmtPct(bk.total_return), cls(bk.total_return))}
+            ${kpi("CAGR", fmtPct(bk.cagr), cls(bk.cagr))}
+            ${kpi("Vol (ann.)", fmtPct(bk.vol_daily))}
+            ${kpi("Sharpe", fmtNum(bk.sharpe))}
+            ${kpi("Sortino", fmtNum(bk.sortino))}
+            ${kpi("Max DD", fmtUSD(bk.max_dd_usd), "neg")}
+            ${kpi("Max DD %", fmtPct(bk.max_dd_pct), "neg")}
+            ${kpi("Calmar", fmtNum(bk.calmar))}
+            ${kpi("Win rate", fmtPct(bk.win_rate))}
+            ${kpi("Profit factor", fmtNum(bk.profit_factor))}
+            ${kpi("Trades / yr", fmtNum(bk.trades_per_year, 0))}
+            ${kpi("Avg hold (h)", fmtNum(bk.avg_holding_hours, 1))}
+            ${kpi("Best month", bk.best_month ? `${bk.best_month.month} ${bk.best_month.year} (${fmtPct(bk.best_month.return)})` : "—", "pos")}
+            ${kpi("Worst month", bk.worst_month ? `${bk.worst_month.month} ${bk.worst_month.year} (${fmtPct(bk.worst_month.return)})` : "—", "neg")}
+            ${kpi("Worst year", bk.worst_year != null ? `${bk.worst_year} (${fmtUSD(bk.worst_year_pnl_usd)})` : "—", "neg")}
+          </div>
+          <p class="note">${bt.note || ""}</p>
+        </div>
+
+        <div class="panel backtest">
+          <h2><span class="badge backtest">Backtest</span> Monthly returns</h2>
+          <div style="overflow-x:auto">
+            <table class="month-grid">
+              <thead>
+                <tr><th>Year</th>${monthNames.map(m => `<th>${m}</th>`).join("")}<th>Annual</th></tr>
+              </thead>
+              <tbody>${monthRows || `<tr><td colspan="14">No monthly data</td></tr>`}</tbody>
+            </table>
           </div>
         </div>
 
-        <div class="panel">
-          <h2>Risk</h2>
-          <p class="note">${d.stress_note || ""}</p>
-        </div>
-
-        <div class="panel">
-          <div class="banner" style="margin-bottom:12px">${d.yearly_table_banner || "Backtest only — not live trading"}</div>
-          <h2>Backtest performance by year</h2>
+        <div class="panel backtest">
+          <h2><span class="badge backtest">Backtest</span> Yearly summary</h2>
           <table>
             <thead>
-              <tr>
-                <th>Year</th>
-                <th>Strategy PnL</th>
-                <th>Strategy equity EOY</th>
-                <th>SPY return</th>
-                <th>SPY PnL on $100k</th>
-              </tr>
+              <tr><th>Year</th><th>PnL</th><th>Return on $100k</th><th>Equity EOY</th></tr>
             </thead>
             <tbody id="yearly-body"></tbody>
           </table>
         </div>
+
+        <div class="panel">
+          <h2>Assumptions &amp; disclosures</h2>
+          <div class="overview">
+            <div class="item"><div class="lbl">Returns</div><div class="val" style="font-weight:400;font-size:0.9rem">${(d.assumptions||{}).returns || "—"}</div></div>
+            <div class="item"><div class="lbl">Costs</div><div class="val" style="font-weight:400;font-size:0.9rem">${(d.assumptions||{}).slippage || "—"}</div></div>
+            <div class="item"><div class="lbl">Capital path</div><div class="val" style="font-weight:400;font-size:0.9rem">${(d.assumptions||{}).capital_path || "—"}</div></div>
+          </div>
+          <ul class="disc">
+            ${(d.disclosures || []).map(x => `<li>${x}</li>`).join("")}
+          </ul>
+        </div>
       `;
 
       const tbody = document.getElementById("yearly-body");
-      for (const row of (d.yearly || [])) {
+      for (const row of (bt.yearly || [])) {
         const tr = document.createElement("tr");
         tr.innerHTML = `
           <td>${row.year}</td>
           <td class="${cls(row.strategy_pnl_usd)}">${fmtUSD(row.strategy_pnl_usd)}</td>
-          <td>${fmtUSD(row.strategy_equity_end)}</td>
-          <td class="${cls(row.benchmark_return)}">${fmtPct(row.benchmark_return)}</td>
-          <td class="${cls(row.benchmark_pnl_usd)}">${fmtUSD(row.benchmark_pnl_usd)}</td>`;
+          <td class="${cls(row.strategy_return)}">${fmtPct(row.strategy_return)}</td>
+          <td>${fmtUSD(row.strategy_equity_end)}</td>`;
         tbody.appendChild(tr);
       }
 
-      const pLabels = (d.equity_practice || []).map(pt => pt.date);
-      const pVals = (d.equity_practice || []).map(pt => pt.equity);
-      if (pLabels.length) {
-        lineChart("practiceChart", pLabels, [{
-          label: "Practice",
-          data: pVals,
+      const liveEq = live.equity || d.equity_practice || [];
+      if (liveEq.length) {
+        lineChart("liveChart", liveEq.map(p => p.date), [{
+          label: "Live / Sim",
+          data: liveEq.map(p => p.equity),
           borderColor: "#3ecf8e",
           backgroundColor: "rgba(62,207,142,0.12)",
           borderWidth: 2,
-          pointRadius: 3,
+          pointRadius: liveEq.length < 40 ? 3 : 0,
           tension: 0.2,
           fill: true,
-        }], 0.35);
+        }], 0.35, false);
       }
 
-      const sLabels = (d.equity_strategy || []).map(pt => pt.date);
-      const sVals = (d.equity_strategy || []).map(pt => pt.equity);
-      const bMap = Object.fromEntries((d.equity_benchmark || []).map(pt => [pt.date, pt.equity]));
-      const bVals = sLabels.map(dt => bMap[dt] ?? null);
-      lineChart("eqChart", sLabels, [
-        {
-          label: d.product_name,
-          data: sVals,
-          borderColor: "#3d9cf0",
-          backgroundColor: "rgba(61,156,240,0.12)",
+      const btEq = bt.equity || d.equity_strategy || [];
+      lineChart("btChart", btEq.map(p => p.date), [{
+        label: d.product_name,
+        data: btEq.map(p => p.equity),
+        borderColor: "#3d9cf0",
+        backgroundColor: "rgba(61,156,240,0.12)",
+        borderWidth: 2,
+        pointRadius: 0,
+        tension: 0.15,
+        fill: true,
+      }], null, false);
+
+      const dd = bt.drawdown || [];
+      if (dd.length) {
+        lineChart("ddChart", dd.map(p => p.date), [{
+          label: "Drawdown",
+          data: dd.map(p => p.dd_pct),
+          borderColor: "#f07178",
+          backgroundColor: "rgba(240,113,120,0.12)",
           borderWidth: 2,
           pointRadius: 0,
           tension: 0.15,
-        },
-        {
-          label: "SPY (long-only)",
-          data: bVals,
-          borderColor: "#9aa7b5",
-          borderWidth: 2,
-          pointRadius: 0,
-          tension: 0.15,
-        },
-      ], null);
+          fill: true,
+        }], 0.15, true);
+      }
     }
 
     async function loadTab(tab, buttons) {
       for (const b of buttons) b.classList.toggle("active", b.dataset.id === tab.id);
       const res = await fetch(tab.data, { cache: "no-store" });
       if (!res.ok) throw new Error(`Failed to load ${tab.data}: ${res.status}`);
-      const data = await res.json();
-      renderStrategy(data);
-      if (history.replaceState) {
-        history.replaceState(null, "", "#" + tab.id);
-      }
+      renderTearSheet(await res.json());
+      if (history.replaceState) history.replaceState(null, "", "#" + tab.id);
     }
 
     async function load() {
       const catRes = await fetch("data/catalog.json", { cache: "no-store" });
       if (!catRes.ok) throw new Error("Failed to load catalog.json");
       const catalog = await catRes.json();
-      document.getElementById("product-title").textContent = catalog.title || "Strategy Track Record";
-      if (catalog.disclaimer) {
-        document.getElementById("top-disclaimer").textContent = catalog.disclaimer;
-      }
+      document.getElementById("product-title").textContent = catalog.title || "Strategy Tear Sheets";
+      if (catalog.disclaimer) document.getElementById("top-disclaimer").textContent = catalog.disclaimer;
 
       const tabsEl = document.getElementById("tabs");
       tabsEl.innerHTML = "";
