@@ -2,7 +2,7 @@
   "schema_version": 5,
   "product_name": "FX Momentum",
   "tab_id": "fx_momentum",
-  "as_of": "2026-09-10",
+  "as_of": "2026-09-11",
   "disclaimer": "LIVE/SIM results (top) are unaudited practice fills for this strategy only. BACKTEST results (bottom) are hypothetical historical performance \u2014 not an offer to invest and not a prediction of future results. Markets, rules, and trade-level details are intentionally undisclosed.",
   "overview": {
     "style": "Systematic",
@@ -45,8 +45,8 @@
   },
   "live": {
     "kpis": {
-      "end_equity": 111162.4,
-      "total_return": 0.111624,
+      "end_equity": 112191.37,
+      "total_return": 0.121914,
       "max_dd_usd": -1533.53,
       "max_dd_pct": -0.014332,
       "time_underwater_pct": 0.2,
@@ -54,11 +54,11 @@
       "n_trades": 5,
       "trades_per_year": 260.9,
       "win_rate": 0.8,
-      "avg_trade_usd": 2232.48,
-      "profit_factor": 8.279,
+      "avg_trade_usd": 2438.27,
+      "profit_factor": 8.95,
       "avg_holding_hours": 7.25,
       "n_campaigns": 5,
-      "net_usd": 11162.4,
+      "net_usd": 12191.37,
       "window_start": "2026-09-03",
       "window_end": "2026-09-10"
     },
@@ -85,7 +85,7 @@
       },
       {
         "date": "2026-09-10",
-        "equity": 111162.4
+        "equity": 112191.37
       }
     ],
     "note": "Unaudited practice results for this strategy sleeve only (not full-account P&L)."
@@ -2059,8 +2059,8 @@
     "note": "Hypothetical historical study. Separated from live/sim above."
   },
   "practice_kpis": {
-    "end_equity": 111162.4,
-    "total_return": 0.111624,
+    "end_equity": 112191.37,
+    "total_return": 0.121914,
     "max_dd_usd": -1533.53,
     "max_dd_pct": -0.014332,
     "time_underwater_pct": 0.2,
@@ -2068,11 +2068,11 @@
     "n_trades": 5,
     "trades_per_year": 260.9,
     "win_rate": 0.8,
-    "avg_trade_usd": 2232.48,
-    "profit_factor": 8.279,
+    "avg_trade_usd": 2438.27,
+    "profit_factor": 8.95,
     "avg_holding_hours": 7.25,
     "n_campaigns": 5,
-    "net_usd": 11162.4,
+    "net_usd": 12191.37,
     "window_start": "2026-09-03",
     "window_end": "2026-09-10"
   },
@@ -2136,7 +2136,7 @@
     },
     {
       "date": "2026-09-10",
-      "equity": 111162.4
+      "equity": 112191.37
     }
   ],
   "equity_strategy": [
@@ -2938,5 +2938,5 @@
     }
   ],
   "campaign_net_check_usd_1x": 146427.31,
-  "practice_net_check_usd": 11162.4
+  "practice_net_check_usd": 12191.37
 }
