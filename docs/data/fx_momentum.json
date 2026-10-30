@@ -2,7 +2,7 @@
   "schema_version": 5,
   "product_name": "FX Momentum",
   "tab_id": "fx_momentum",
-  "as_of": "2026-10-29",
+  "as_of": "2026-10-30",
   "disclaimer": "LIVE/SIM results (top) are unaudited practice fills for this strategy only. BACKTEST results (bottom) are hypothetical historical performance \u2014 not an offer to invest and not a prediction of future results. Markets, rules, and trade-level details are intentionally undisclosed.",
   "overview": {
     "style": "Systematic",
@@ -19,7 +19,7 @@
     },
     "live": {
       "start": "2026-09-03",
-      "end": "2026-10-28",
+      "end": "2026-10-29",
       "label": "LIVE / SIM (unaudited)"
     }
   },
@@ -45,28 +45,28 @@
   },
   "live": {
     "kpis": {
-      "end_equity": 104823.79,
-      "total_return": 0.048238,
-      "cagr": 0.367326,
-      "max_dd_usd": -15839.36,
-      "max_dd_pct": -0.148031,
-      "vol_daily": 0.295944,
-      "sharpe": -0.355,
-      "sortino": -0.454,
-      "calmar": 2.319,
-      "parmar": 2.319,
-      "time_underwater_pct": 0.7429,
-      "n_points": 35,
-      "n_trades": 39,
-      "trades_per_year": 259.0,
-      "win_rate": 0.5128,
-      "avg_trade_usd": 123.69,
-      "profit_factor": 1.173,
-      "avg_holding_hours": 7.25,
-      "n_campaigns": 39,
-      "net_usd": 4823.79,
+      "end_equity": 103688.27,
+      "total_return": 0.036883,
+      "cagr": 0.266467,
+      "max_dd_usd": -15885.9,
+      "max_dd_pct": -0.148466,
+      "vol_daily": 0.292985,
+      "sharpe": -0.607,
+      "sortino": -0.791,
+      "calmar": 1.677,
+      "parmar": 1.677,
+      "time_underwater_pct": 0.75,
+      "n_points": 36,
+      "n_trades": 40,
+      "trades_per_year": 260.9,
+      "win_rate": 0.5,
+      "avg_trade_usd": 92.21,
+      "profit_factor": 1.127,
+      "avg_holding_hours": 7.21,
+      "n_campaigns": 40,
+      "net_usd": 3688.27,
       "window_start": "2026-09-03",
-      "window_end": "2026-10-28"
+      "window_end": "2026-10-29"
     },
     "equity": [
       {
@@ -212,6 +212,10 @@
       {
         "date": "2026-10-28",
         "equity": 104823.79
+      },
+      {
+        "date": "2026-10-29",
+        "equity": 103688.27
       }
     ],
     "note": "Unaudited practice results for this strategy sleeve only (not full-account P&L)."
@@ -2185,28 +2189,28 @@
     "note": "Hypothetical historical study. Separated from live/sim above."
   },
   "practice_kpis": {
-    "end_equity": 104823.79,
-    "total_return": 0.048238,
-    "cagr": 0.367326,
-    "max_dd_usd": -15839.36,
-    "max_dd_pct": -0.148031,
-    "vol_daily": 0.295944,
-    "sharpe": -0.355,
-    "sortino": -0.454,
-    "calmar": 2.319,
-    "parmar": 2.319,
-    "time_underwater_pct": 0.7429,
-    "n_points": 35,
-    "n_trades": 39,
-    "trades_per_year": 259.0,
-    "win_rate": 0.5128,
-    "avg_trade_usd": 123.69,
-    "profit_factor": 1.173,
-    "avg_holding_hours": 7.25,
-    "n_campaigns": 39,
-    "net_usd": 4823.79,
+    "end_equity": 103688.27,
+    "total_return": 0.036883,
+    "cagr": 0.266467,
+    "max_dd_usd": -15885.9,
+    "max_dd_pct": -0.148466,
+    "vol_daily": 0.292985,
+    "sharpe": -0.607,
+    "sortino": -0.791,
+    "calmar": 1.677,
+    "parmar": 1.677,
+    "time_underwater_pct": 0.75,
+    "n_points": 36,
+    "n_trades": 40,
+    "trades_per_year": 260.9,
+    "win_rate": 0.5,
+    "avg_trade_usd": 92.21,
+    "profit_factor": 1.127,
+    "avg_holding_hours": 7.21,
+    "n_campaigns": 40,
+    "net_usd": 3688.27,
     "window_start": "2026-09-03",
-    "window_end": "2026-10-28"
+    "window_end": "2026-10-29"
   },
   "kpis": {
     "end_equity": 246427.31,
@@ -2389,6 +2393,10 @@
     {
       "date": "2026-10-28",
       "equity": 104823.79
+    },
+    {
+      "date": "2026-10-29",
+      "equity": 103688.27
     }
   ],
   "equity_strategy": [
@@ -3190,5 +3198,5 @@
     }
   ],
   "campaign_net_check_usd_1x": 146427.31,
-  "practice_net_check_usd": 4823.79
+  "practice_net_check_usd": 3688.27
 }
