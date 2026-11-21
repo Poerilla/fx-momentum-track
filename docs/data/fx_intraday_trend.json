@@ -2,7 +2,7 @@
   "schema_version": 5,
   "product_name": "FX Intraday Trend",
   "tab_id": "fx_intraday_trend",
-  "as_of": "2026-11-20",
+  "as_of": "2026-11-21",
   "disclaimer": "LIVE/SIM results (top) are unaudited practice fills for this strategy only. BACKTEST results (bottom) are hypothetical historical performance \u2014 not an offer to invest and not a prediction of future results. Markets, rules, and trade-level details are intentionally undisclosed.",
   "overview": {
     "style": "Systematic",
@@ -19,7 +19,7 @@
     },
     "live": {
       "start": "2026-07-28",
-      "end": "2026-11-19",
+      "end": "2026-11-20",
       "label": "LIVE / SIM (unaudited)"
     }
   },
@@ -45,28 +45,28 @@
   },
   "live": {
     "kpis": {
-      "end_equity": 94291.53,
-      "total_return": -0.057085,
-      "cagr": -0.171654,
+      "end_equity": 95046.82,
+      "total_return": -0.049532,
+      "cagr": -0.149003,
       "max_dd_usd": -7190.1,
       "max_dd_pct": -0.072196,
-      "vol_daily": 0.207411,
-      "sharpe": -4.05,
-      "sortino": -12.865,
-      "calmar": -2.387,
-      "parmar": -2.387,
-      "time_underwater_pct": 0.9375,
-      "n_points": 16,
+      "vol_daily": 0.204336,
+      "sharpe": -3.289,
+      "sortino": -10.189,
+      "calmar": -2.072,
+      "parmar": -2.072,
+      "time_underwater_pct": 0.9412,
+      "n_points": 17,
       "n_trades": 23,
-      "trades_per_year": 73.7,
-      "win_rate": 0.087,
-      "avg_trade_usd": -248.19,
-      "profit_factor": 0.479,
-      "avg_holding_hours": 7.52,
+      "trades_per_year": 73.0,
+      "win_rate": 0.1304,
+      "avg_trade_usd": -215.36,
+      "profit_factor": 0.543,
+      "avg_holding_hours": 7.75,
       "n_campaigns": 23,
-      "net_usd": -5708.47,
+      "net_usd": -4953.18,
       "window_start": "2026-07-28",
-      "window_end": "2026-11-19"
+      "window_end": "2026-11-20"
     },
     "equity": [
       {
@@ -135,7 +135,11 @@
       },
       {
         "date": "2026-11-19",
-        "equity": 94291.53
+        "equity": 94395.12
+      },
+      {
+        "date": "2026-11-20",
+        "equity": 95046.82
       }
     ],
     "note": "Unaudited practice results for this strategy sleeve only (not full-account P&L)."
@@ -10209,28 +10213,28 @@
     "note": "Hypothetical historical study. Separated from live/sim above."
   },
   "practice_kpis": {
-    "end_equity": 94291.53,
-    "total_return": -0.057085,
-    "cagr": -0.171654,
+    "end_equity": 95046.82,
+    "total_return": -0.049532,
+    "cagr": -0.149003,
     "max_dd_usd": -7190.1,
     "max_dd_pct": -0.072196,
-    "vol_daily": 0.207411,
-    "sharpe": -4.05,
-    "sortino": -12.865,
-    "calmar": -2.387,
-    "parmar": -2.387,
-    "time_underwater_pct": 0.9375,
-    "n_points": 16,
+    "vol_daily": 0.204336,
+    "sharpe": -3.289,
+    "sortino": -10.189,
+    "calmar": -2.072,
+    "parmar": -2.072,
+    "time_underwater_pct": 0.9412,
+    "n_points": 17,
     "n_trades": 23,
-    "trades_per_year": 73.7,
-    "win_rate": 0.087,
-    "avg_trade_usd": -248.19,
-    "profit_factor": 0.479,
-    "avg_holding_hours": 7.52,
+    "trades_per_year": 73.0,
+    "win_rate": 0.1304,
+    "avg_trade_usd": -215.36,
+    "profit_factor": 0.543,
+    "avg_holding_hours": 7.75,
     "n_campaigns": 23,
-    "net_usd": -5708.47,
+    "net_usd": -4953.18,
     "window_start": "2026-07-28",
-    "window_end": "2026-11-19"
+    "window_end": "2026-11-20"
   },
   "kpis": {
     "end_equity": 330948.69,
@@ -10336,7 +10340,11 @@
     },
     {
       "date": "2026-11-19",
-      "equity": 94291.53
+      "equity": 94395.12
+    },
+    {
+      "date": "2026-11-20",
+      "equity": 95046.82
     }
   ],
   "equity_strategy": [
@@ -15038,5 +15046,5 @@
     }
   ],
   "campaign_net_check_usd_1x": 230948.69,
-  "practice_net_check_usd": -5708.47
+  "practice_net_check_usd": -4953.18
 }
